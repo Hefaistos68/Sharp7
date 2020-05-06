@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Sharp7
 {
-	public static class S7Consts
+	public static partial class S7Consts
 	{
 		#region [Exported Consts]
 		// Error codes
@@ -98,10 +98,6 @@ namespace Sharp7
 		public const int S7WLReal    = 0x08;
 		public const int S7WLCounter = 0x1C;
 		public const int S7WLTimer   = 0x1D;
-		// PLC Status
-		public const int S7CpuStatusUnknown = 0x00;
-		public const int S7CpuStatusRun     = 0x08;
-		public const int S7CpuStatusStop    = 0x04;
 
 		[StructLayout(LayoutKind.Sequential, Pack = 1)]
 		public struct S7Tag

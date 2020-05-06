@@ -1,4 +1,12 @@
-﻿using System;
+﻿///////////////////////////////////////////////////////////////////////////////
+//
+// <copyright file="$filename" company="AUP Lda.">
+// (c) AUP Lda.
+// </copyright>
+//
+///////////////////////////////////////////////////////////////////////////////
+
+using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -7,46 +15,53 @@ namespace Sharp7
 	public class S7MultiVar
 	{
 		#region [MultiRead/Write Helper]
+
 		private S7Client FClient;
 		private GCHandle[] Handles = new GCHandle[S7Client.MaxVars];
 		private int Count = 0;
-		private S7Client.S7DataItem[] Items = new S7Client.S7DataItem[S7Client.MaxVars];
-
+		private S7DataItem[] Items = new S7DataItem[S7Client.MaxVars];
 
 		public int[] Results = new int[S7Client.MaxVars];
 
 		private bool AdjustWordLength(int Area, ref int WordLen, ref int Amount, ref int Start)
 		{
-			// Calc Word size          
+			// Calc Word size
 			int WordSize = S7.DataSizeByte(WordLen);
-			if (WordSize == 0)
+			if(WordSize == 0)
 				return false;
 
-			if (Area == S7Consts.S7AreaCT)
+			if(Area == S7Consts.S7AreaCT)
+			{
 				WordLen = S7Consts.S7WLCounter;
-			if (Area == S7Consts.S7AreaTM)
+			}
+			else if(Area == S7Consts.S7AreaTM)
+			{
 				WordLen = S7Consts.S7WLTimer;
+			}
 
-			if (WordLen == S7Consts.S7WLBit)
+			if(WordLen == S7Consts.S7WLBit)
+			{
 				Amount = 1;  // Only 1 bit can be transferred at time
+			}
 			else
 			{
-				if ((WordLen != S7Consts.S7WLCounter) && (WordLen != S7Consts.S7WLTimer))
+				if((WordLen != S7Consts.S7WLCounter) && (WordLen != S7Consts.S7WLTimer))
 				{
 					Amount = Amount * WordSize;
 					Start = Start * 8;
 					WordLen = S7Consts.S7WLByte;
 				}
-			}   
+			}
 			return true;
 		}
 
 		public S7MultiVar(S7Client Client)
 		{
 			FClient = Client;
-			for (int c = 0; c < S7Client.MaxVars; c++)
+			for(int c = 0; c < S7Client.MaxVars; c++)
 				Results[c] = (int)S7Consts.errCliItemNotAvailable;
 		}
+
 		~S7MultiVar()
 		{
 			Clear();
@@ -69,9 +84,9 @@ namespace Sharp7
 
 		public bool Add<T>(Int32 Area, Int32 WordLen, Int32 DBNumber, Int32 Start, Int32 Amount, ref T[] Buffer, int Offset)
 		{
-			if (Count < S7Client.MaxVars)
+			if(Count < S7Client.MaxVars)
 			{
-				if (AdjustWordLength(Area, ref WordLen, ref Amount, ref Start))
+				if(AdjustWordLength(Area, ref WordLen, ref Amount, ref Start))
 				{
 					Items[Count].Area = Area;
 					Items[Count].WordLen = WordLen;
@@ -81,12 +96,12 @@ namespace Sharp7
 					Items[Count].Amount = Amount;
 					GCHandle handle = GCHandle.Alloc(Buffer, GCHandleType.Pinned);
 #if WINDOWS_UWP || NETFX_CORE
-                    if (IntPtr.Size == 4)
-                        Items[Count].pData = (IntPtr)(handle.AddrOfPinnedObject().ToInt32() + Offset * Marshal.SizeOf<T>());
-                    else
-                        Items[Count].pData = (IntPtr)(handle.AddrOfPinnedObject().ToInt64() + Offset * Marshal.SizeOf<T>());
-#else
 					if (IntPtr.Size == 4)
+						Items[Count].pData = (IntPtr)(handle.AddrOfPinnedObject().ToInt32() + Offset * Marshal.SizeOf<T>());
+					else
+						Items[Count].pData = (IntPtr)(handle.AddrOfPinnedObject().ToInt64() + Offset * Marshal.SizeOf<T>());
+#else
+					if(IntPtr.Size == 4)
 						Items[Count].pData = (IntPtr)(handle.AddrOfPinnedObject().ToInt32() + Offset * Marshal.SizeOf(typeof(T)));
 					else
 						Items[Count].pData = (IntPtr)(handle.AddrOfPinnedObject().ToInt64() + Offset * Marshal.SizeOf(typeof(T)));
@@ -108,11 +123,11 @@ namespace Sharp7
 			int GlobalResult = (int)S7Consts.errCliFunctionRefused;
 			try
 			{
-				if (Count > 0)
+				if(Count > 0)
 				{
 					FunctionResult = FClient.ReadMultiVars(Items, Count);
-					if (FunctionResult == 0)
-						for (int c = 0; c < S7Client.MaxVars; c++)
+					if(FunctionResult == 0)
+						for(int c = 0; c < S7Client.MaxVars; c++)
 							Results[c] = Items[c].Result;
 					GlobalResult = FunctionResult;
 				}
@@ -132,11 +147,11 @@ namespace Sharp7
 			int GlobalResult = (int)S7Consts.errCliFunctionRefused;
 			try
 			{
-				if (Count > 0)
+				if(Count > 0)
 				{
 					FunctionResult = FClient.WriteMultiVars(Items, Count);
-					if (FunctionResult == 0)
-						for (int c = 0; c < S7Client.MaxVars; c++)
+					if(FunctionResult == 0)
+						for(int c = 0; c < S7Client.MaxVars; c++)
 							Results[c] = Items[c].Result;
 					GlobalResult = FunctionResult;
 				}
@@ -152,13 +167,14 @@ namespace Sharp7
 
 		public void Clear()
 		{
-			for (int c = 0; c < Count; c++)
+			for(int c = 0; c < Count; c++)
 			{
-				if (Handles[c] != null)
+				if(Handles[c] != null)
 					Handles[c].Free();
 			}
 			Count = 0;
 		}
-		#endregion
+
+		#endregion [MultiRead/Write Helper]
 	}
 }
